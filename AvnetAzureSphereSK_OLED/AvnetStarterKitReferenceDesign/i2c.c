@@ -51,6 +51,8 @@
 #include "lsm6dso_reg.h"
 #include "lps22hh_reg.h"
 
+#include "pms.h";
+
 /* Private variables ---------------------------------------------------------*/
 static axis3bit16_t data_raw_acceleration;
 static axis3bit16_t data_raw_angular_rate;
@@ -75,6 +77,8 @@ float altitude;
 uint8_t lsm6dso_status = 1;
 uint8_t lps22hh_status = 1;
 uint8_t RTCore_status = 1;
+
+DATA pms_data;
 
 //Extern variables
 int i2cFd = -1;
@@ -211,6 +215,39 @@ void AccelTimerEventHandler(EventData *eventData)
 
 	Log_Debug("ALSPT19: Ambient Light[Lux] : %.2f\r\n", light_sensor);
 
+	Log_Debug("PMS7003 read...");
+	pms_read(&pms_data);
+
+	uint16_t pm_1_0 = -1;
+	uint16_t pm_2_5 = -1;
+	uint16_t pm_10_0 = -1;
+	uint16_t pm_1_0_atm = -1;
+	uint16_t pm_2_5_atm = -1;
+	uint16_t pm_10_0_atm = -1;
+
+	pms_data = pms_getData();
+	if (pms_data.PM_SP_UG_1_0 != 0xFFFF) {
+		Log_Debug("\r\n");
+		
+		pm_1_0 = pms_data.PM_SP_UG_1_0;
+		pm_2_5 = pms_data.PM_SP_UG_2_5;
+		pm_10_0 = pms_data.PM_SP_UG_10_0;
+		pm_1_0_atm = pms_data.PM_AE_UG_1_0;
+		pm_2_5_atm = pms_data.PM_AE_UG_2_5;
+		pm_10_0_atm = pms_data.PM_AE_UG_10_0;
+
+		Log_Debug("PM  1.0 (ug/m3): %5d\r\n", pms_data.PM_SP_UG_1_0);
+		Log_Debug("PM 2.5 (ug/m3): %5d\r\n", pms_data.PM_SP_UG_2_5);
+		Log_Debug("PM 10.0 (ug/m3): %5d\r\n", pms_data.PM_SP_UG_10_0);
+		Log_Debug("PM 1.0 atmf (ug/m3): %5d\r\n", pms_data.PM_AE_UG_1_0);
+		Log_Debug("PM 2.5 atmf (ug/m3): %5d\r\n", pms_data.PM_AE_UG_2_5);
+		Log_Debug("PM 10.0 atmf (ug/m3): %5d\r\n", pms_data.PM_AE_UG_10_0);
+	}
+	else {
+		Log_Debug("NO DATA\r\n");
+	}
+
+
 	//// OLED
 	update_oled();
 
@@ -227,8 +264,21 @@ void AccelTimerEventHandler(EventData *eventData)
 			Log_Debug("ERROR: not enough memory to send telemetry");
 		}
 		
-		snprintf(pjsonBuffer, JSON_BUFFER_SIZE, "{\"gX\":\"%.2lf\", \"gY\":\"%.2lf\", \"gZ\":\"%.2lf\", \"aX\": \"%.2f\", \"aY\": \"%.2f\", \"aZ\": \"%.2f\", \"pressure\": \"%.2f\", \"light_intensity\": \"%.2f\", \"altitude\": \"%.2f\", \"temp\": \"%.2f\",  \"rssi\": \"%d\"}",
-			angular_rate_dps[0], angular_rate_dps[1], angular_rate_dps[2], acceleration_mg[0], acceleration_mg[1], acceleration_mg[2], pressure_hPa, light_sensor, altitude, lsm6dsoTemperature_degC, network_data.rssi);
+		snprintf(pjsonBuffer, JSON_BUFFER_SIZE, "{\
+			 \"gX\":\"%.2lf\",\"gY\":\"%.2lf\", \"gZ\":\"%.2lf\", \
+			 \"aX\": \"%.2f\", \"aY\": \"%.2f\", \"aZ\": \"%.2f\", \
+			 \"pressure\": \"%.2f\", \"light_intensity\": \"%.2f\", \
+			 \"altitude\": \"%.2f\", \"temp\": \"%.2f\",  \"rssi\": \"%d\", \
+			 \"pm1.0\": \"%.1f\", \"pm2.5\": \"%.1f\", \"pm10\": \"%.1f\", \
+			 \"pm1.0_at\": \"%.1f\", \"pm2.5_at\": \"%.1f\", \"pm10_at\": \"%.1f\" \
+			}",
+			angular_rate_dps[0], angular_rate_dps[1], angular_rate_dps[2],
+			acceleration_mg[0], acceleration_mg[1], acceleration_mg[2],
+			pressure_hPa, light_sensor,
+			altitude, lsm6dsoTemperature_degC, network_data.rssi,
+			pm_1_0, pm_2_5, pm_10_0,
+			pm_1_0_atm, pm_2_5_atm, pm_10_0_atm
+			);
 
 		Log_Debug("\n[Info] Sending telemetry: %s\n", pjsonBuffer);
 		AzureIoT_SendMessage(pjsonBuffer);

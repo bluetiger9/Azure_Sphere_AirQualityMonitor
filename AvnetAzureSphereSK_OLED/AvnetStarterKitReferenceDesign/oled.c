@@ -31,6 +31,8 @@ extern uint8_t RTCore_status;
 extern uint8_t lsm6dso_status;
 extern uint8_t lps22hh_status;
 
+extern DATA pms_data;
+
 /**
   * @brief  OLED initialization.
   * @param  None.
@@ -90,6 +92,11 @@ void update_oled()
 		}
 		break;
 		case 7:
+		{
+			update_pms(pms_data);
+		}
+		break;
+		case 8:
 		{
 			oled_draw_logo();
 		}
@@ -565,6 +572,56 @@ void update_other(float x, float y, float z)
 	sd1306_draw_string(sizeof(str_tbd2) * 6, OLED_LINE_3_Y, string_data, FONT_SIZE_LINE, white_pixel);
 	// Draw the units of z
 	sd1306_draw_string(sizeof(str_tbd2) * 6 + (get_str_size(string_data) + 1) * 6, OLED_LINE_3_Y, "Units", FONT_SIZE_LINE, white_pixel);
+
+	// Send the buffer to OLED RAM
+	sd1306_refresh();
+}
+
+void update_pms(DATA pms_data)
+{
+	uint32_t i;
+	uint8_t string_data[10];
+
+	// Strings for labels
+	uint8_t str_pm_1_0[] = "PM 2.5: ";
+	uint8_t str_pm_2_5[] = "PM 2.5: ";
+	uint8_t str_pm_10_0[] = "PM 10.0: ";
+
+	// Clear OLED buffer
+	clear_oled_buffer();
+
+	// Draw the title
+	sd1306_draw_string(OLED_TITLE_X, OLED_TITLE_Y, "Air Quality", FONT_SIZE_TITLE, white_pixel);
+
+	// Convert x value to string
+	ftoa(pms_data.PM_AE_UG_1_0, string_data, 0);
+
+	// Draw a label at line 1
+	sd1306_draw_string(OLED_LINE_1_X, OLED_LINE_1_Y, str_pm_1_0, FONT_SIZE_LINE, white_pixel);
+	// Draw the value of x
+	sd1306_draw_string(sizeof(str_pm_1_0) * 6, OLED_LINE_1_Y, string_data, FONT_SIZE_LINE, white_pixel);
+	// Draw the units of x
+	sd1306_draw_string(sizeof(str_pm_1_0) * 6 + (get_str_size(string_data) + 1) * 6, OLED_LINE_1_Y, "ug/m3", FONT_SIZE_LINE, white_pixel);
+
+	// Convert y value to string
+	ftoa(pms_data.PM_AE_UG_2_5, string_data, 0);
+
+	// Draw a label at line 2
+	sd1306_draw_string(OLED_LINE_2_X, OLED_LINE_2_Y, str_pm_2_5, FONT_SIZE_LINE, white_pixel);
+	// Draw the value of y
+	sd1306_draw_string(sizeof(str_pm_2_5) * 6, OLED_LINE_2_Y, string_data, FONT_SIZE_LINE, white_pixel);
+	// Draw the units of y
+	sd1306_draw_string(sizeof(str_pm_2_5) * 6 + (get_str_size(string_data) + 1) * 6, OLED_LINE_2_Y, "ug/m3", FONT_SIZE_LINE, white_pixel);
+
+	// Convert z value to string
+	ftoa(pms_data.PM_AE_UG_10_0, string_data, 0);
+
+	// Draw a label at line 3
+	sd1306_draw_string(OLED_LINE_3_X, OLED_LINE_3_Y, str_pm_10_0, FONT_SIZE_LINE, white_pixel);
+	// Draw the value of z
+	sd1306_draw_string(sizeof(str_pm_10_0) * 6, OLED_LINE_3_Y, string_data, FONT_SIZE_LINE, white_pixel);
+	// Draw the units of z
+	sd1306_draw_string(sizeof(str_pm_10_0) * 6 + (get_str_size(string_data) + 1) * 6, OLED_LINE_3_Y, "ug/m3", FONT_SIZE_LINE, white_pixel);
 
 	// Send the buffer to OLED RAM
 	sd1306_refresh();

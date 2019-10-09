@@ -47,6 +47,7 @@
 #include <math.h>
 
 // applibs_versions.h defines the API struct versions to use for applibs APIs.
+
 #include "applibs_versions.h"
 #include "epoll_timerfd_utilities.h"
 #include "i2c.h"
@@ -59,11 +60,14 @@
 #include <applibs/log.h>
 #include <applibs/i2c.h>
 #include <applibs/gpio.h>
+#include <applibs/uart.h>
 #include <applibs/wificonfig.h>
 #include <azureiot/iothub_device_client_ll.h>
 
 //// OLED
 #include "oled.h"
+
+#include "pms.h"
 
 //// ADC connection
 #include <sys/time.h>
@@ -91,8 +95,8 @@ int userLedGreenFd = -1;
 int userLedBlueFd = -1;
 int appLedFd = -1;
 int wifiLedFd = -1;
-int clickSocket1Relay1Fd = -1;
-int clickSocket1Relay2Fd = -1;
+//int clickSocket1Relay1Fd = -1;
+//int clickSocket1Relay2Fd = -1;
 
 //// ADC connection
 static const char rtAppComponentId[] = "005180bc-402f-4cb3-a662-72937dbcde47";
@@ -470,6 +474,9 @@ int main(int argc, char *argv[])
     if (InitPeripheralsAndHandlers() != 0) {
         terminationRequired = true;
     }
+
+	//pms_init(MT3620_UART_ISU0);
+	pms_init(AVT_SK_CM1_ISU0_UART, epollFd);
 
     // Use epoll to wait for events and trigger handlers, until an error or SIGTERM happens
     while (!terminationRequired) {

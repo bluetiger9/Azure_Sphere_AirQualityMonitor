@@ -9,9 +9,10 @@
 #include "applibs_versions.h"
 #include <applibs/wificonfig.h>
 #include "deviceTwin.h"
+#include "pms.h"
 
 
-#define OLED_NUM_SCREEN 7
+#define OLED_NUM_SCREEN 8
 
 #define OLED_TITLE_X      0
 #define OLED_TITLE_Y      0 
@@ -93,6 +94,7 @@ void update_accel(float x, float y, float z);
 void update_angular_rate(float x, float y, float z);
 void update_environ(float temp1, float temp2, float atm);
 void update_other(float x, float y, float z);
+void update_pms(DATA pms_data);
 
 /**
   * @brief  Converts a given integer x to string uint8_t[]
