@@ -21,8 +21,8 @@
 
 #include <time.h>
 
-uint16_t makeWord(uint8_t x, uint8_t y) {
-	return (y << 8) | (x);
+uint16_t makeWord(uint8_t high, uint8_t low) {
+	return (high << 8) | (low);
 }
 //#define MAKEWORD(x, y) ((y) << 8 | (x))
 
@@ -301,6 +301,13 @@ void pms_processData(uint8_t ch) {
 						_pms_data.PM_AE_UG_1_0 = makeWord(_pms_payload[6], _pms_payload[7]);
 						_pms_data.PM_AE_UG_2_5 = makeWord(_pms_payload[8], _pms_payload[9]);
 						_pms_data.PM_AE_UG_10_0 = makeWord(_pms_payload[10], _pms_payload[11]);
+
+						_pms_data.CNT_0_3 = makeWord(_pms_payload[12], _pms_payload[13]);
+						_pms_data.CNT_0_5 = makeWord(_pms_payload[14], _pms_payload[15]);
+						_pms_data.CNT_1_0 = makeWord(_pms_payload[16], _pms_payload[17]);
+						_pms_data.CNT_2_5 = makeWord(_pms_payload[18], _pms_payload[19]);
+						_pms_data.CNT_5_0 = makeWord(_pms_payload[20], _pms_payload[21]);
+						_pms_data.CNT_10_0 = makeWord(_pms_payload[22], _pms_payload[23]);
 					//}
 
 					_pms_status = STATUS_OK;					

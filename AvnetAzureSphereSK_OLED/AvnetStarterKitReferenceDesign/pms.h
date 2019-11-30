@@ -28,6 +28,15 @@
 		uint16_t PM_AE_UG_1_0;
 		uint16_t PM_AE_UG_2_5;
 		uint16_t PM_AE_UG_10_0;
+
+		// Atmospheric environment
+		uint16_t CNT_0_3;
+		uint16_t CNT_0_5;
+		uint16_t CNT_1_0;
+		uint16_t CNT_2_5;
+		uint16_t CNT_5_0;
+		uint16_t CNT_10_0;
+
 	} DATA;
 
 	void pms_init(UART_Id, int);
@@ -48,7 +57,7 @@
 	typedef enum STATUS { STATUS_WAITING, STATUS_OK } STATUS;
 	typedef enum MODE { MODE_ACTIVE, MODE_PASSIVE } MODE;
 
-	static uint8_t _pms_payload[12];
+	static uint8_t _pms_payload[26];
 	static UART_Id _pms_uartId;
 	static DATA _pms_data;
 	static STATUS _pms_status;
