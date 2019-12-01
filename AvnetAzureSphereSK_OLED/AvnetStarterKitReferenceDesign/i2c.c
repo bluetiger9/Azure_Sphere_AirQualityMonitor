@@ -215,8 +215,9 @@ void AccelTimerEventHandler(EventData *eventData)
 
 	Log_Debug("ALSPT19: Ambient Light[Lux] : %.2f\r\n", light_sensor);
 
-	Log_Debug("PMS7003 read...");
-	pms_read(&pms_data);
+	// note: pms_data is populated by the real-time app
+	//Log_Debug("PMS7003 read...");
+	//pms_read(&pms_data);
 
 	uint16_t pm_1_0 = -1;
 	uint16_t pm_2_5 = -1;
@@ -225,7 +226,7 @@ void AccelTimerEventHandler(EventData *eventData)
 	uint16_t pm_2_5_atm = -1;
 	uint16_t pm_10_0_atm = -1;
 
-	pms_data = pms_getData();
+	//pms_data = pms_getData();
 	if (pms_data.PM_SP_UG_1_0 != 0xFFFF) {
 		Log_Debug("\r\n");
 		

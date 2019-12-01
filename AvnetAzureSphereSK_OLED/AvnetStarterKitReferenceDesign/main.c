@@ -249,12 +249,6 @@ static void SocketEventHandler(EventData *eventData)
 {
 	// Read response from real-time capable application.
 	char rxBuf[32];
-	union Analog_data
-	{
-		uint32_t u32;
-		uint8_t u8[4];
-	} analog_data;
-
 	int bytesReceived = recv(sockFd, rxBuf, sizeof(rxBuf), 0);
 
 	if (bytesReceived == -1) {
@@ -262,19 +256,15 @@ static void SocketEventHandler(EventData *eventData)
 		terminationRequired = true;
 	}
 
+	DATA pms_data_local;
+        uint8_t data = &pms_data_local
 	// Copy data from Rx buffer to analog_data union
-	for (int i = 0; i < sizeof(analog_data); i++)
+	for (int i = 0; i < sizeof(pms_data_local); i++)
 	{
-		analog_data.u8[i] = rxBuf[i];
+		data[i] = rxBuf[i];
 	}
 
-	// get voltage (2.5*adc_reading/4096)
-	// divide by 3650 (3.65 kohm) to get current (A)
-	// multiply by 1000000 to get uA
-	// divide by 0.1428 to get Lux (based on fluorescent light Fig. 1 datasheet)
-	// divide by 0.5 to get Lux (based on incandescent light Fig. 1 datasheet)
-	// We can simplify the factors, but for demostration purpose it's OK
-	light_sensor = ((float)analog_data.u32*2.5/4095)*1000000 / (3650*0.1428);
+	pms_data = pms_data_local;
 
 	Log_Debug("Received %d bytes. ", bytesReceived);
 
@@ -475,8 +465,8 @@ int main(int argc, char *argv[])
         terminationRequired = true;
     }
 
-	//pms_init(MT3620_UART_ISU0);
-	pms_init(AVT_SK_CM1_ISU0_UART, epollFd);
+	// note: enable this if the real-time app is not used
+	// pms_init(AVT_SK_CM1_ISU0_UART, epollFd);
 
     // Use epoll to wait for events and trigger handlers, until an error or SIGTERM happens
     while (!terminationRequired) {

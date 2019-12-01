@@ -75,21 +75,7 @@ static void HandleUartIsu0RxIrq(void)
 
 static void HandleUartIsu0RxIrqDeferred(void)
 {
-	uint8_t buffer[32];
-
-	for (;;) {
-		size_t availBytes = Uart_DequeueData(UartIsu0, buffer, sizeof(buffer));
-
-		if (availBytes == 0) {
-			return;
-		}
-
-		Uart_EnqueueString(UartCM4Debug, "UART received ");
-		Uart_EnqueueIntegerAsString(UartCM4Debug, availBytes);
-		Uart_EnqueueString(UartCM4Debug, " bytes: \'");
-		Uart_EnqueueData(UartCM4Debug, buffer, availBytes);
-		Uart_EnqueueString(UartCM4Debug, "\'.\r\n");
-	}
+	pms_uartIrqHandle();
 }
 
 static CallbackNode *volatile callbacks = NULL;
@@ -137,24 +123,9 @@ static _Noreturn void RTCoreMain(void)
 		UartCM4Debug,
 		"Install a loopback header on ISU0, and press button A to send a message.\r\n");
 
-	//Uart_Init(UartIsu0, HandleUartIsu0RxIrq);
+	Uart_Init(UartIsu0, HandleUartIsu0RxIrq);
 
-	// Block includes led1RedGpio, GPIO8.
-	static const GpioBlock pwm2 = {
-		.baseAddr = 0x38030000,.type = GpioBlock_PWM,.firstPin = 8,.pinCount = 4 };
-
-	Mt3620_Gpio_AddBlock(&pwm2);
-
-	// Block includes buttonAGpio, GPIO12
-	static const GpioBlock grp3 = {
-		.baseAddr = 0x38040000,.type = GpioBlock_GRP,.firstPin = 12,.pinCount = 4 };
-
-	//static const uintptr_t ADC_CTRL_BASE = 0x38000100;
-
-	Mt3620_Gpio_AddBlock(&grp3);
-
-	//Mt3620_Gpio_ConfigurePinForOutput(led1RedGpio);
-	//Mt3620_Gpio_ConfigurePinForInput(buttonAGpio);
+	pms_init(UartIsu0);
 
 	BufferHeader *outbound, *inbound;
 	uint32_t sharedBufSize = 0;
@@ -162,8 +133,7 @@ static _Noreturn void RTCoreMain(void)
 		for (;;) {
 			// empty.
 		}
-	}
-	
+	}	
 
 	static const size_t payloadStart = 20;
 	static const int tickPeriodUs = 1 * 1000 * 1000;
@@ -189,12 +159,16 @@ static _Noreturn void RTCoreMain(void)
 			continue;
 		}
 
-		uint8_t analog_data[4];// = { 0 , 1, 2, 3 };
+		DATA pms_data;
+		pms_read(&pms_data);
+		pms_data = pms_getData();
+
+		uint8_t *data = &pms_data;
 		j = 0;
-		for (int i = payloadStart; i < payloadStart + 4; i++)
+		for (int i = payloadStart; i < payloadStart + sizeof(pms_data); i++)
 		{
 			// Put ADC data to buffer
-			buf[i] = analog_data[j++];
+			buf[i] = data[j++];
 		}
 
 		// Send buffer to A7 Core
